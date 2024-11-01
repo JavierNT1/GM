@@ -20,3 +20,5 @@
 
 ¡Y eso es todo! Ahora podrás disfrutar de **Lunar Odyssey**.
 
+**IMPORTANTE**
+Además, si no te aparece el icono de abrir en la terminal, abre CMD y escribe `cd` con un espacio, luego arrastra la carpeta al CMD. Si tienes problemas, asegúrate de tener gradlew en el PC. Ejecuta este comando: `gradlew lwjgl3:run`.

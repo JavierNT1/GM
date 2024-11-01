@@ -7,9 +7,9 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 
-public class Nave4 extends Elemento {
-    private int armadura; 
+public class Nave4 extends ElementoMovil implements Colisionable{
     private boolean destruida = false;
     private boolean herido = false;
     private int tiempoHeridoMax = 50;
@@ -18,16 +18,18 @@ public class Nave4 extends Elemento {
     private Sound sonidoHerido;
     private Sound soundBala;
     private Texture txBala;
+    private int poderAtaque;
+    private int vida;
 
-    public Nave4(float x, float y, int vida, int armadura, Texture tx, Sound soundChoque, Texture txBala, Sound soundBala) {
-        super(x, y, vida, 0, 0, 0);  // vida se pasa a través de Elemento
+    public Nave4(float x, float y, Texture tx, Sound soundChoque, Texture txBala, Sound soundBala, int vidaInicial) {
+        super(x, y,0, 0);  // vida se pasa a través de Elemento
         this.sonidoHerido = soundChoque;
         this.soundBala = soundBala;
         this.txBala = txBala;
         this.spr = new Sprite(tx);
-        this.armadura = armadura;  
         spr.setPosition(x, y);
         spr.setBounds(x, y, 45, 45);
+        this.vida = vidaInicial;
     }
 
     public void draw(SpriteBatch batch, PantallaJuego juego) {
@@ -48,8 +50,8 @@ public class Nave4 extends Elemento {
         if (Gdx.input.isKeyJustPressed(Input.Keys.UP)) ySpeed++;
 
         // Mantener dentro de los bordes
-        if (x + xSpeed < 0 || x + xSpeed + spr.getWidth() > Gdx.graphics.getWidth()) xSpeed *= -1;
-        if (y + ySpeed < 0 || y + ySpeed + spr.getHeight() > Gdx.graphics.getHeight()) ySpeed *= -1;
+        if (x + xSpeed < 0 || x + xSpeed + spr.getWidth() > Gdx.graphics.getWidth()) xSpeed *= 0;
+        if (y + ySpeed < 0 || y + ySpeed + spr.getHeight() > Gdx.graphics.getHeight()) ySpeed *= 0;
         
         // Actualizar la posición del sprite
         x += xSpeed;
@@ -72,32 +74,6 @@ public class Nave4 extends Elemento {
         if (tiempoHerido <= 0) herido = false;
     }
 
-    public boolean checkCollision(Ball2 b) {
-        if (!herido && b.getArea().overlaps(spr.getBoundingRectangle())) {
-            // Rebote
-            if (xSpeed == 0) xSpeed += b.getxSpeed() / 2;
-            if (b.getxSpeed() == 0) b.setxSpeed(b.getxSpeed() + (int) xSpeed / 2);
-            xSpeed = -xSpeed;
-            b.setxSpeed(-b.getxSpeed());
-
-            if (ySpeed == 0) ySpeed += b.getySpeed() / 2;
-            if (b.getySpeed() == 0) b.setySpeed(b.getySpeed() + (int) ySpeed / 2);
-            ySpeed = -ySpeed;
-            b.setySpeed(-b.getySpeed());
-
-            // Calcular el daño considerando la armadura
-            int daño = Math.max(1, 10 - armadura); // La armadura reduce el daño (mínimo de 1)
-            vida -= daño;
-            herido = true;
-            tiempoHerido = tiempoHeridoMax;
-            sonidoHerido.play();
-
-            if (vida <= 0) destruida = true;
-            return true;
-        }
-        return false;
-    }
-    
     @Override
     public void update() {
         if (!herido) {
@@ -108,14 +84,63 @@ public class Nave4 extends Elemento {
         }
     }
 
+    @Override
+    public boolean colisionarCon(Colisionable elemento) {
+        if (elemento instanceof Ball2) {
+            Ball2 b = (Ball2) elemento;
+    
+            if (!herido && b.getArea().overlaps(spr.getBoundingRectangle())) {
+                ajustarRebote(b); // Llamada a método que encapsula la lógica de rebote
+    
+                System.out.println("Daño recibido: " + b.getDaño());
+                System.out.println("Vida antes de recibir daño: " + vida);
+                vida -= b.getDaño();
+                System.out.println("Vida después de recibir daño: " + vida);
+    
+                herido = true;
+                tiempoHerido = tiempoHeridoMax;
+                sonidoHerido.play();
+    
+                if (vida <= 0) destruida = true;
+                return true;
+            }
+        }
+        return false; // No hubo colisión
+    }
+    
+
+    // Método privado para manejar la lógica de rebote entre objetos
+    @Override
+    public void ajustarRebote(Colisionable elemento) {
+        if (elemento instanceof Ball2) {
+            Ball2 b = (Ball2) elemento;
+
+            if (xSpeed == 0) xSpeed += b.getxSpeed() / 3;
+            if (b.getxSpeed() == 0) b.setxSpeed(b.getxSpeed() + xSpeed / 2);
+
+            // Rebote en x
+            xSpeed = -xSpeed;
+            b.setxSpeed(-b.getxSpeed());
+
+            if (ySpeed == 0) ySpeed += b.getySpeed() / 3;
+            if (b.getySpeed() == 0) b.setySpeed(b.getySpeed() + ySpeed / 2);
+
+            // Rebote en y
+            ySpeed = -ySpeed;
+            b.setySpeed(-b.getySpeed());
+        }
+    }
+
+    @Override
+    public Rectangle obtenerArea() {
+        return spr.getBoundingRectangle(); // Implementación para obtener el área de colisión
+    }
+
+    
+
     // Método para incrementar vida
     public void incrementarVida(int cantidad) {
         this.vida += cantidad;
-    }
-
-    // Método para incrementar armadura
-    public void incrementarArmadura(int cantidad) {
-        this.armadura += cantidad;
     }
 
     public boolean estaDestruido() {
@@ -130,11 +155,13 @@ public class Nave4 extends Elemento {
         return vida;
     }
 
-    public int getX() {
+    @Override
+    public float getX() {
         return (int) spr.getX();
     }
-
-    public int getY() {
+    
+    @Override
+    public float getY() {
         return (int) spr.getY();
     }
 

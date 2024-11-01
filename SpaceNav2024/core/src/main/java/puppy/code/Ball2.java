@@ -6,21 +6,27 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 
-public class Ball2 extends Elemento {
+public class Ball2 extends ElementoMovil {
     private Sprite spr;
+    protected final int daño; 
 
     public Ball2(int x, int y, int size, int xSpeed, int ySpeed, Texture tx) {
         super(x, y, xSpeed, ySpeed);
+        this.daño = 1;
         spr = new Sprite(tx);
-
+        
+        // Margen de seguridad de 50 píxeles
+        int margen = 50; 
+    
         // Validación de posición para que la esfera no quede fuera del borde
-        if (x - size < 0) this.x = x + size;
-        if (x + size > Gdx.graphics.getWidth()) this.x = x - size;
-        if (y - size < 0) this.y = y + size;
-        if (y + size > Gdx.graphics.getHeight()) this.y = y - size;
-
+        if (x - size < margen) this.x = margen + size;
+        if (x + size > Gdx.graphics.getWidth() - margen) this.x = Gdx.graphics.getWidth() - margen - size;
+        if (y - size < margen) this.y = margen + size;
+        if (y + size > Gdx.graphics.getHeight() - margen) this.y = Gdx.graphics.getHeight() - margen - size;
+    
         spr.setPosition(this.x, this.y);
     }
+    
     
     @Override
     public void update() {
@@ -45,18 +51,68 @@ public class Ball2 extends Elemento {
         spr.draw(batch);
     }
 
-    public void checkCollision(Ball2 b2) {
-        if (spr.getBoundingRectangle().overlaps(b2.getArea())) {
-            // Rebote en caso de colisión
-            if (getxSpeed() == 0) setxSpeed(getxSpeed() + b2.getxSpeed() / 2);
-            if (b2.getxSpeed() == 0) b2.setxSpeed(b2.getxSpeed() + getxSpeed() / 2);
-            setxSpeed(-getxSpeed());
-            b2.setxSpeed(-b2.getxSpeed());
-
-            if (getySpeed() == 0) setySpeed(getySpeed() + b2.getySpeed() / 2);
-            if (b2.getySpeed() == 0) b2.setySpeed(b2.getySpeed() + getySpeed() / 2);
-            setySpeed(-getySpeed());
-            b2.setySpeed(-b2.getySpeed());
+     @Override
+     public boolean colisionarCon(Colisionable elemento) {
+         if (elemento instanceof Ball2) {
+             Ball2 otraBola = (Ball2) elemento;
+             if (this.obtenerArea().overlaps(otraBola.obtenerArea())) {
+                 ajustarRebote(otraBola);
+                 return true;
+             }
+         }
+         return false;
+     }
+     
+    @Override
+    public void ajustarRebote(Colisionable elemento) {
+        if (elemento instanceof Ball2) {
+            Ball2 otraBola = (Ball2) elemento;
+            float separacionMinima = spr.getWidth(); // Distancia mínima para que no se toquen
+            float dx = otraBola.x - this.x;
+            float dy = otraBola.y - this.y;
+            float distanciaActual = (float) Math.sqrt(dx * dx + dy * dy);
+        
+            // Verificar si están superpuestos
+            if (distanciaActual < separacionMinima) {
+                // Corregir posiciones para establecer la separación mínima
+                float ajuste = (separacionMinima - distanciaActual) / 2;
+                float ajusteX = (dx / distanciaActual) * ajuste;
+                float ajusteY = (dy / distanciaActual) * ajuste;
+        
+                this.x -= ajusteX;
+                this.y -= ajusteY;
+                otraBola.x += ajusteX;
+                otraBola.y += ajusteY;
+        
+                // Actualizar posiciones del sprite después del ajuste
+                this.spr.setPosition(this.x, this.y);
+                otraBola.spr.setPosition(otraBola.x, otraBola.y);
+            }
+        
+            // Proporción de masa (si tienen masas iguales, puedes omitir esto)
+            float masaTotal = 2; // Suponiendo masa = 1 para ambos, puedes ajustar según el caso
+        
+            // Calculamos las nuevas velocidades (rebote elástico)
+            int nuevaVelocidadX1 = (int) (((this.getxSpeed() * (1 - 1)) + (2 * otraBola.getxSpeed())) / masaTotal);
+            int nuevaVelocidadY1 = (int) (((this.getySpeed() * (1 - 1)) + (2 * otraBola.getySpeed())) / masaTotal);
+            int nuevaVelocidadX2 = (int) (((otraBola.getxSpeed() * (1 - 1)) + (2 * this.getxSpeed())) / masaTotal);
+            int nuevaVelocidadY2 = (int) (((otraBola.getySpeed() * (1 - 1)) + (2 * this.getySpeed())) / masaTotal);
+        
+            // Establecemos las velocidades corregidas
+            this.setxSpeed(nuevaVelocidadX1);
+            this.setySpeed(nuevaVelocidadY1);
+            otraBola.setxSpeed(nuevaVelocidadX2);
+            otraBola.setySpeed(nuevaVelocidadY2);
         }
     }
+       
+    public int getDaño() {
+        return daño; // Daño base para Ball2
+    }
+
+    @Override
+    public Rectangle obtenerArea() {
+    return spr.getBoundingRectangle();
+    }
+
 }

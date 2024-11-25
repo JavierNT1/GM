@@ -93,29 +93,6 @@ public class PantallaJuego implements Screen {
             balls1.add(asteroide);
             balls2.add(asteroide);
         }
-
-        // Crear asteroides especiales (hielo o fuego) basado en la ronda
-        int asteroidesEspeciales = (ronda * (ronda + 1)) / 2; // Fórmula para la suma de los primeros n números naturales
-
-        for (int i = 0; i < asteroidesEspeciales; i++) {
-            int x = r.nextInt((int) Gdx.graphics.getWidth());
-            int y = 50 + r.nextInt((int) Gdx.graphics.getHeight() - 50);
-            int xSpeed = velXAsteroides + r.nextInt(12);
-            int ySpeed = velYAsteroides + r.nextInt(12);
-
-            // Decide aleatoriamente si el asteroide especial será de hielo o fuego
-            int tipoEspecial = r.nextInt(2); // 0 = hielo, 1 = fuego
-            Asteroide2 asteroideEspecial;
-
-            if (tipoEspecial == 0) {
-                asteroideEspecial = director.construirAsteroideHielo(x, y, xSpeed, ySpeed);
-            } else {
-                asteroideEspecial = director.construirAsteroideFuego(x, y, xSpeed, ySpeed);
-            }
-
-            balls1.add(asteroideEspecial);
-            balls2.add(asteroideEspecial);
-        }
     }
 
 	    

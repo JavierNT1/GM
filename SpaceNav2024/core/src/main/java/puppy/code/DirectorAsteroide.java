@@ -16,7 +16,7 @@ public class DirectorAsteroide {
     }
 
     public Asteroide2 construirAsteroideHielo(int x, int y, int xSpeed, int ySpeed) {
-        return new Asteroide2.AsteroideBuilder(x, y, xSpeed, ySpeed, new Texture("bGreyMedium4.png"), new AsteroideColisionStrategy())
+        return new Asteroide2.AsteroideBuilder(x, y, xSpeed, ySpeed, new Texture("bGreyMedium4.png"), new AsteroideColisionHieloStrategy())
                 .setTipo("Hielo")
                 .setTamaño(3)
                 .setVelocidad(4.0)
@@ -25,7 +25,7 @@ public class DirectorAsteroide {
     }
 
     public Asteroide2 construirAsteroideFuego(int x, int y, int xSpeed, int ySpeed) {
-        return new Asteroide2.AsteroideBuilder(x, y, xSpeed, ySpeed, new Texture("cGreyMedium4.png"), new AsteroideColisionStrategy())
+        return new Asteroide2.AsteroideBuilder(x, y, xSpeed, ySpeed, new Texture("cGreyMedium4.png"), new AsteroideColisionFuegoStrategy())
                 .setTipo("Fuego")
                 .setTamaño(3)
                 .setVelocidad(4.0)

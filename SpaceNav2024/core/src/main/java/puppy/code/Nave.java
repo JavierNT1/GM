@@ -86,6 +86,7 @@ public class Nave extends ElementoMovil implements Colisiones{
     public void draw(SpriteBatch batch, PantallaJuego juego) {
         if (!herido) {
             mover();
+            actualizarEstado();
             spr.setPosition(getX() + getxSpeed(), getY() + getySpeed());
             spr.draw(batch);
         } else {

@@ -25,9 +25,9 @@ public class PantallaJuego implements Screen {
     private int velYAsteroides; 
     private int cantAsteroides;
     private Texture background;
-    private Nave4 nave;
-    private ArrayList<Ball2> balls1 = new ArrayList<>();
-    private ArrayList<Ball2> balls2 = new ArrayList<>();
+    private Nave nave;
+    private ArrayList<Asteroide2> balls1 = new ArrayList<>();
+    private ArrayList<Asteroide2> balls2 = new ArrayList<>();
     private ArrayList<Bullet> balas = new ArrayList<>();
 
     public PantallaJuego(SpaceNavigation game, int ronda, int vidas, int score,  
@@ -47,13 +47,13 @@ public class PantallaJuego implements Screen {
         explosionSound = Gdx.audio.newSound(Gdx.files.internal("explosion.ogg"));
         explosionSound.setVolume(1, 0.3f);
         gameMusic = Gdx.audio.newMusic(Gdx.files.internal("piano-loops.wav")); 
-        background = new Texture(Gdx.files.internal("background.png"));
+        background = new Texture(Gdx.files.internal("backgroundMoon.jpg"));
         gameMusic.setLooping(true);
         gameMusic.setVolume(0.3f);
         gameMusic.play();
         
         // Cargar imagen de la nave, 64x64   
-        nave = new Nave4(Gdx.graphics.getWidth()/2 - 50, 30, 
+        nave = new Nave(Gdx.graphics.getWidth()/2 - 50, 30, 
                          new Texture(Gdx.files.internal("MainShip3.png")),
                          Gdx.audio.newSound(Gdx.files.internal("hurt.ogg")), 
                          new Texture(Gdx.files.internal("Rocket2.png")), 
@@ -64,40 +64,60 @@ public class PantallaJuego implements Screen {
         crearAsteroides();
     }
     
-	private void crearAsteroides() {
-		Random r = new Random();
-		
-		// Crear asteroides normales
-		for (int i = 0; i < cantAsteroides; i++) {
-			Ball2 bb = new Ball2(
-				r.nextInt((int) Gdx.graphics.getWidth()),
-				50 + r.nextInt((int) Gdx.graphics.getHeight() - 50),
-				20 + r.nextInt(10), 
-				velXAsteroides + r.nextInt(4), 
-				velYAsteroides + r.nextInt(4), 
-				new Texture(Gdx.files.internal("aGreyMedium4.png"))
-			);       
-			balls1.add(bb);
-			balls2.add(bb);
-		}
-	
-		// Calcular el número de asteroides especiales a crear en esta ronda
-		int asteroidesEspeciales = (ronda * (ronda + 1)) / 2; // Fórmula para la suma de los primeros n números naturales
-	
-		// Crear asteroides especiales
-		for (int i = 0; i < asteroidesEspeciales; i++) {
-			Ball2 nuevoAsteroide = new Ball2(
-				r.nextInt((int) Gdx.graphics.getWidth()),
-				50 + r.nextInt((int) Gdx.graphics.getHeight() - 50),
-				20 + r.nextInt(20),
-				velXAsteroides + r.nextInt(12),
-				velYAsteroides + r.nextInt(12),
-				new Texture(Gdx.files.internal("bGreyMedium4.png")) // Usa la nueva textura
-			);
-			balls1.add(nuevoAsteroide);
-			balls2.add(nuevoAsteroide);
-		}
-	}
+    private void crearAsteroides() {
+        Random r = new Random();
+        DirectorAsteroide director = new DirectorAsteroide();
+
+        // Crear asteroides normales
+        for (int i = 0; i < cantAsteroides; i++) {
+            int x = r.nextInt((int) Gdx.graphics.getWidth());
+            int y = 50 + r.nextInt((int) Gdx.graphics.getHeight() - 50);
+            int xSpeed = r.nextInt(5) - 2; // Velocidad aleatoria entre -2 y 2
+            int ySpeed = r.nextInt(5) - 2;
+
+            // Decide aleatoriamente el tipo de asteroide a crear (normal, hielo o fuego)
+            int tipoAsteroide = r.nextInt(3); // 0 = normal, 1 = hielo, 2 = fuego
+            Asteroide2 asteroide;
+
+            if (tipoAsteroide == 0) {
+                asteroide = director.construirAsteroideNormal(x, y, xSpeed, ySpeed);
+                asteroide.setEstrategia(new AsteroideColisionStrategy()); // No hay efecto especial
+            } else if (tipoAsteroide == 1) {
+                asteroide = director.construirAsteroideHielo(x, y, xSpeed, ySpeed);
+                asteroide.setEstrategia(new AsteroideColisionHieloStrategy()); // Congelamiento
+            } else {
+                asteroide = director.construirAsteroideFuego(x, y, xSpeed, ySpeed);
+                asteroide.setEstrategia(new AsteroideColisionFuegoStrategy()); // Quemadura
+            }
+
+            balls1.add(asteroide);
+            balls2.add(asteroide);
+        }
+
+        // Crear asteroides especiales (hielo o fuego) basado en la ronda
+        int asteroidesEspeciales = (ronda * (ronda + 1)) / 2; // Fórmula para la suma de los primeros n números naturales
+
+        for (int i = 0; i < asteroidesEspeciales; i++) {
+            int x = r.nextInt((int) Gdx.graphics.getWidth());
+            int y = 50 + r.nextInt((int) Gdx.graphics.getHeight() - 50);
+            int xSpeed = velXAsteroides + r.nextInt(12);
+            int ySpeed = velYAsteroides + r.nextInt(12);
+
+            // Decide aleatoriamente si el asteroide especial será de hielo o fuego
+            int tipoEspecial = r.nextInt(2); // 0 = hielo, 1 = fuego
+            Asteroide2 asteroideEspecial;
+
+            if (tipoEspecial == 0) {
+                asteroideEspecial = director.construirAsteroideHielo(x, y, xSpeed, ySpeed);
+            } else {
+                asteroideEspecial = director.construirAsteroideFuego(x, y, xSpeed, ySpeed);
+            }
+
+            balls1.add(asteroideEspecial);
+            balls2.add(asteroideEspecial);
+        }
+    }
+
 	    
     public void dibujaEncabezado() {
         CharSequence str = "Vidas: " + nave.getVidas() + " Ronda: " + ronda;
@@ -139,17 +159,17 @@ public class PantallaJuego implements Screen {
             }
 
             // Actualizar movimiento de asteroides dentro del área
-            for (Ball2 ball : balls1) {
+            for (Asteroide2 ball : balls1) {
                 ball.update();
             }
 
             // Colisiones entre asteroides y sus rebotes  
             for (int i = 0; i < balls1.size(); i++) {
-                Ball2 ball1 = balls1.get(i);   
+                Asteroide2 ball1 = balls1.get(i);   
                 for (int j = 0; j < balls2.size(); j++) {
-                    Ball2 ball2 = balls2.get(j); 
+                    Asteroide2 ball2 = balls2.get(j); 
                     if (i < j) {
-                        ball1.colisionarCon(ball2);
+                        ball1.colisionar(ball2);
                     }
                 }
             } 
@@ -163,10 +183,10 @@ public class PantallaJuego implements Screen {
 
         // Dibujar asteroides y manejar colisión con nave
         for (int i = 0; i < balls1.size(); i++) {
-            Ball2 b = balls1.get(i);
+            Asteroide2 b = balls1.get(i);
             b.draw(batch);
             // Verificar si nave perdió vida o game over
-            if (nave.colisionarCon(b)) {
+            if (nave.checkCollision(b)) {
                 // Asteroide se destruye con el choque             
                 balls1.remove(i);
                 balls2.remove(i);

@@ -1,24 +1,33 @@
-# Cómo ejecutar Lunar Odyssey
+# SpaceNav2024
 
-1. **Descargar el juego desde GitHub:** Visita [este enlace](https://github.com/JavierNT1/GM) para acceder al repositorio del juego.
+A [libGDX](https://libgdx.com/) project generated with [gdx-liftoff](https://github.com/libgdx/gdx-liftoff).
 
-2. **Descargar la carpeta del juego:**
-   - Haz clic en la opción **Download ZIP** para descargar el archivo comprimido.
-![image](https://github.com/user-attachments/assets/d97d3d83-8592-4032-9b84-10e1d25e8380)
-3. **Extraer la carpeta:**
-   - Descomprime el archivo descargado y mueve la carpeta a tu escritorio.
-![image](https://github.com/user-attachments/assets/714c720a-c12c-4c07-bc71-0aaeafc4b378)
-4. **Abrir el proyecto:**
-   - Asegúrate de que la carpeta esté en el escritorio para poder acceder a ella fácilmente.
-![image](https://github.com/user-attachments/assets/1b143113-275a-462d-8fbc-f088a3ab0f8d)
+This project was generated with a template including simple application launchers and an `ApplicationAdapter` extension that draws libGDX logo.
 
-5. **Ejecutar el comando:**
-   - Abre una terminal en la carpeta del proyecto y ejecuta el siguiente comando:
-     ```
-     ./gradlew lwjgl3:run
-     ```
+## Platforms
 
-¡Y eso es todo! Ahora podrás disfrutar de **Lunar Odyssey**.
+- `core`: Main module with the application logic shared by all platforms.
+- `lwjgl3`: Primary desktop platform using LWJGL3; was called 'desktop' in older docs.
 
-**IMPORTANTE**
-Además, si no te aparece el icono de abrir en la terminal, abre CMD y escribe `cd` con un espacio, luego arrastra la carpeta al CMD. Si tienes problemas, asegúrate de tener gradlew en el PC. Ejecuta este comando: `gradlew lwjgl3:run`.
+## Gradle
+
+This project uses [Gradle](https://gradle.org/) to manage dependencies.
+The Gradle wrapper was included, so you can run Gradle tasks using `gradlew.bat` or `./gradlew` commands.
+Useful Gradle tasks and flags:
+
+- `--continue`: when using this flag, errors will not stop the tasks from running.
+- `--daemon`: thanks to this flag, Gradle daemon will be used to run chosen tasks.
+- `--offline`: when using this flag, cached dependency archives will be used.
+- `--refresh-dependencies`: this flag forces validation of all dependencies. Useful for snapshot versions.
+- `build`: builds sources and archives of every project.
+- `cleanEclipse`: removes Eclipse project data.
+- `cleanIdea`: removes IntelliJ project data.
+- `clean`: removes `build` folders, which store compiled classes and built archives.
+- `eclipse`: generates Eclipse project data.
+- `idea`: generates IntelliJ project data.
+- `lwjgl3:jar`: builds application's runnable jar, which can be found at `lwjgl3/build/libs`.
+- `lwjgl3:run`: starts the application.
+- `test`: runs unit tests (if any).
+
+Note that most tasks that are not specific to a single project can be run with `name:` prefix, where the `name` should be replaced with the ID of a specific project.
+For example, `core:clean` removes `build` folder only from the `core` project.
